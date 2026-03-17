@@ -31,6 +31,10 @@ jobs:
         pip install -r requirements.txt
         pip install psycopg2-binary
 
+    - name: Run Tests
+      run: |
+        python manage.py test tracker.tests
+
     - name: Run Crypto Bot
       run: |
         # Asumiendo que tu comando se llama 'run_news_bot'
