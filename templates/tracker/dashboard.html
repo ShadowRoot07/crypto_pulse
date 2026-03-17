@@ -18,12 +18,14 @@
 
         <div class="glass p-6 border-l-4 border-fuchsia-500">
             <h3 class="text-lg font-bold mb-4 text-fuchsia-400 uppercase">AI_PREDICTOR_V1 // {{ selected_crypto.symbol }}</h3>
-            <form class="flex gap-4">
-                <input type="number" step="any" placeholder="Amount of {{ selected_crypto.symbol }}..." 
+            <div class="flex gap-4">
+                <input type="number" id="predictAmount" step="any" placeholder="Amount of {{ selected_crypto.symbol }}..."
                        class="bg-black/50 border border-fuchsia-900 p-2 text-sm w-full outline-none focus:border-fuchsia-500 text-fuchsia-200">
-                <button type="submit" class="cyber-btn bg-fuchsia-600 text-white px-8 py-2 text-sm font-bold hover:bg-fuchsia-400 transition">ANALYZE</button>
-            </form>
-            <div class="mt-4 p-3 bg-fuchsia-950/20 border border-fuchsia-900/50 text-xs italic text-fuchsia-300">
+                <button type="button" onclick="runAnalysis()" class="cyber-btn bg-fuchsia-600 text-white px-8 py-2 text-sm font-bold hover:bg-fuchsia-400 transition">
+                    ANALYZE
+                </button>
+            </div>
+            <div id="aiResponseBox" class="mt-4 p-3 bg-fuchsia-950/20 border border-fuchsia-900/50 text-xs italic text-fuchsia-300 min-h-[60px]">
                 [SYSTEM]: Waiting for data input to initialize technical analysis...
             </div>
         </div>
@@ -57,6 +59,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // 1. Lógica de la Gráfica
     const ctx = document.getElementById('cryptoChart').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, 'rgba(34, 211, 238, 0.4)');
@@ -87,6 +90,39 @@
             }
         }
     });
+
+    // 2. Lógica de Predicción AJAX
+    async function runAnalysis() {
+        const amount = document.getElementById('predictAmount').value;
+        const responseBox = document.getElementById('aiResponseBox');
+        const symbol = "{{ selected_crypto.symbol }}";
+
+        if (!amount || amount <= 0) {
+            responseBox.innerHTML = "[ERROR]: Ingrese una cantidad válida.";
+            return;
+        }
+
+        responseBox.innerHTML = "<span class='animate-pulse text-fuchsia-500'>[ANALYZING_MARKET_TRENDS...]</span>";
+
+        try {
+            const response = await fetch("{% url 'predict_api' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ symbol: symbol, amount: amount })
+            });
+
+            const data = await response.json();
+            if (data.prediction) {
+                responseBox.innerHTML = `<span class='text-white font-bold'>> ANALYSIS_COMPLETE:</span><br>${data.prediction}`;
+            } else {
+                responseBox.innerHTML = "[ERROR]: Fallo en la respuesta del núcleo.";
+            }
+        } catch (error) {
+            responseBox.innerHTML = "[ERROR]: Conexión perdida con la IA.";
+        }
+    }
 </script>
 {% endblock %}
 
