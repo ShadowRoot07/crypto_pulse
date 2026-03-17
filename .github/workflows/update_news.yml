@@ -30,8 +30,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install psycopg2-binary
-
+    
     - name: Run Tests
+      env:
+        # Forzamos SQLite solo para los tests, evitando el error de Neon
+        DATABASE_URL: sqlite:///db.sqlite3
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        DEBUG: "True"
       run: |
         python manage.py test tracker.tests
 
