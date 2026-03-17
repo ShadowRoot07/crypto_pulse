@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto h-[80vh] flex flex-col glass p-4 border-b-4 border-cyan-500">
+    <div class="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+        {% for msg in messages %}
+        <div class="{% if msg.sender_type == 'USER' %}text-right{% else %}text-left{% endif %}">
+            <span class="text-[10px] uppercase opacity-40">{{ msg.sender_type }}</span>
+            <div class="inline-block max-w-[80%] p-3 text-sm 
+                {% if msg.sender_type == 'USER' %}
+                bg-cyan-900/30 border border-cyan-500 text-cyan-100 rounded-l-lg rounded-tr-lg
+                {% else %}
+                bg-fuchsia-900/30 border border-fuchsia-500 text-fuchsia-100 rounded-r-lg rounded-tl-lg
+                {% endif %}">
+                {{ msg.message }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <form method="POST" class="flex gap-2">
+        {% csrf_token %}
+        <input type="text" name="message" placeholder="Escribe un mensaje al sistema..." 
+               class="flex-1 bg-black/60 border border-cyan-900 p-3 text-sm outline-none focus:border-cyan-400">
+        <button type="submit" class="bg-cyan-600 text-black px-6 font-bold cyber-btn">SEND</button>
+    </form>
+</div>
+{% endblock %}
+

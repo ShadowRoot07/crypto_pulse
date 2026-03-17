@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    
+    <div class="text-center">
+        <h2 class="text-3xl font-bold tracking-tighter text-fuchsia-500 uppercase italic">Crypto_Archives_v0.1</h2>
+        <p class="text-xs text-cyan-700 font-mono">ACCESO AUTORIZADO - NIVEL 3</p>
+    </div>
+
+    <div class="grid gap-4">
+        <div class="glass p-4 border-l-2 border-cyan-500">
+            <h3 class="font-bold text-cyan-400 mb-2 uppercase">¿Qué son las Criptomonedas?</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+                Son activos digitales que utilizan criptografía fuerte para asegurar transacciones. A diferencia del dinero fiat (como el dólar), no dependen de un banco central, sino de una red descentralizada.
+            </p>
+        </div>
+
+        <div class="glass p-4 border-l-2 border-cyan-500">
+            <h3 class="font-bold text-cyan-400 mb-2 uppercase">Blockchain: El Libro Mayor</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+                Imagina un libro de contabilidad donde cada transacción se anota en un "bloque". Una vez que el bloque se llena y se sella, es imposible de borrar o modificar. Eso es la cadena de bloques.
+            </p>
+        </div>
+
+        <div class="glass p-4 border-l-2 border-cyan-500">
+            <h3 class="font-bold text-cyan-400 mb-2 uppercase">Compra y Venta (Trading)</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+                Para operar necesitas un Exchange o una Wallet. Compras barato, vendes caro. La clave es el análisis de mercado que ves en nuestro Dashboard.
+            </p>
+        </div>
+    </div>
+
+    <div class="glass p-6 border-t-2 border-fuchsia-600 shadow-[0_0_20px_rgba(192,38,211,0.2)]">
+        <h3 class="text-fuchsia-400 font-bold mb-4 flex items-center gap-2">
+            <span class="animate-ping">⚡</span> CONSULTAR AL ORÁCULO
+        </h3>
+        
+        {% if ai_response %}
+        <div class="mb-6 p-4 bg-fuchsia-950/20 border border-fuchsia-900 font-mono text-sm text-fuchsia-200">
+            <p class="text-fuchsia-500 font-bold mb-1">> RESPONSE:</p>
+            {{ ai_response|linebreaks }}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="flex gap-2">
+            {% csrf_token %}
+            <input type="text" name="query" placeholder="Pregunta lo que quieras sobre cripto..." 
+                   class="w-full bg-black/40 border border-cyan-900 p-3 text-sm text-cyan-300 outline-none focus:border-fuchsia-500 transition">
+            <button type="submit" class="cyber-btn bg-fuchsia-700 text-white px-6 font-bold hover:bg-fuchsia-500 transition">
+                ASK
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
+

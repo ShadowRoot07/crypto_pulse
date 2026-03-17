@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-2 space-y-6">
+        <div class="glass p-6 rounded-sm border-l-4 border-cyan-500">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold uppercase italic tracking-tighter">
+                    Real_Time_Monitoring: <span class="text-white">{{ selected_crypto.name }}</span>
+                </h2>
+                <span class="text-xs text-cyan-300 animate-pulse">● LIVE_FEED</span>
+            </div>
+            <div class="h-72 w-full">
+                <canvas id="cryptoChart"></canvas>
+            </div>
+        </div>
+
+        <div class="glass p-6 border-l-4 border-fuchsia-500">
+            <h3 class="text-lg font-bold mb-4 text-fuchsia-400 uppercase">AI_PREDICTOR_V1 // {{ selected_crypto.symbol }}</h3>
+            <form class="flex gap-4">
+                <input type="number" step="any" placeholder="Amount of {{ selected_crypto.symbol }}..." 
+                       class="bg-black/50 border border-fuchsia-900 p-2 text-sm w-full outline-none focus:border-fuchsia-500 text-fuchsia-200">
+                <button type="submit" class="cyber-btn bg-fuchsia-600 text-white px-8 py-2 text-sm font-bold hover:bg-fuchsia-400 transition">ANALYZE</button>
+            </form>
+            <div class="mt-4 p-3 bg-fuchsia-950/20 border border-fuchsia-900/50 text-xs italic text-fuchsia-300">
+                [SYSTEM]: Waiting for data input to initialize technical analysis...
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        <h2 class="text-sm font-bold text-cyan-900 tracking-[0.3em] uppercase">Market_Top_10</h2>
+        <div class="space-y-2 overflow-y-auto max-h-[70vh] pr-2">
+            {% for crypto in cryptos %}
+            <a href="?symbol={{ crypto.symbol }}" class="block">
+                <div class="glass p-3 flex justify-between items-center hover:bg-cyan-500/10 transition cursor-pointer {% if selected_crypto.symbol == crypto.symbol %}border-r-4 border-cyan-400 bg-cyan-500/5{% endif %}">
+                    <div class="flex items-center space-x-3">
+                        <img src="{{ crypto.image_url }}" class="w-8 h-8 rounded-full filter brightness-75 {% if selected_crypto.symbol == crypto.symbol %}brightness-100{% endif %}" alt="icon">
+                        <div>
+                            <p class="font-bold leading-none {% if selected_crypto.symbol == crypto.symbol %}text-white{% endif %}">{{ crypto.symbol }}</p>
+                            <p class="text-[10px] text-gray-500 uppercase">{{ crypto.name }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-mono text-cyan-400 text-sm">${{ crypto.current_price|floatformat:2 }}</p>
+                        <p class="text-[10px] {% if crypto.price_change_24h > 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                            {{ crypto.price_change_24h|floatformat:2 }}%
+                        </p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('cryptoChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(34, 211, 238, 0.4)');
+    gradient.addColorStop(1, 'rgba(34, 211, 238, 0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                data: {{ chart_data|safe }},
+                borderColor: '#22d3ee',
+                borderWidth: 2,
+                fill: true,
+                backgroundColor: gradient,
+                tension: 0.4,
+                pointRadius: 2,
+                pointBackgroundColor: '#22d3ee'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#164e63' }, ticks: { color: '#0891b2', font: { size: 10 } } },
+                y: { grid: { color: '#164e63' }, ticks: { color: '#0891b2', font: { size: 10 } } }
+            }
+        }
+    });
+</script>
+{% endblock %}
+
