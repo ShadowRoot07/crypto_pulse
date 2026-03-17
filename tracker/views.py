@@ -71,3 +71,34 @@ def predict_api(request):
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
+@login_required
+def chat_bot(request):
+    """Maneja el chat interactivo con respuesta automática de IA"""
+    if request.method == 'POST':
+        user_msg = request.POST.get('message')
+        # 1. Guardar mensaje del usuario
+        ChatMessage.objects.create(user=request.user, message=user_msg, sender_type='USER')
+        
+        # 2. Generar respuesta de la IA (Advisor Bot)
+        from .ai_logic import client
+        try:
+            prompt = f"Actúa como un asesor técnico Cyberpunk. El usuario dice: {user_msg}"
+            completion = client.chat.completions.create(
+                model="llama-3.3-70b-specdec",
+                messages=[
+                    {"role": "system", "content": "Eres el núcleo de IA de ShadowPulse. Respuestas breves, técnicas y con estilo hacker."},
+                    {"role": "user", "content": prompt}
+                ],
+            )
+            ai_reply = completion.choices[0].message.content
+            # 3. Guardar respuesta del Bot
+            ChatMessage.objects.create(user=request.user, message=ai_reply, sender_type='BOT')
+        except Exception as e:
+            ChatMessage.objects.create(user=request.user, message="[ERROR]: System link severed.", sender_type='BOT')
+
+        return redirect('chat_bot')
+
+    messages = ChatMessage.objects.all().order_by('-timestamp')[:50]
+    return render(request, 'tracker/chat.html', {'messages': messages})
+

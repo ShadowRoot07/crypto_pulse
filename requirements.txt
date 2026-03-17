@@ -1,0 +1,11 @@
+django
+django-environ
+python-dotenv
+dj-database-url
+psycopg2-binary
+requests
+beautifulsoup4
+groq
+whitenoise
+gunicorn
+
