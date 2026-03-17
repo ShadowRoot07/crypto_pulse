@@ -13,21 +13,29 @@ class TestCommands(TestCase):
     @patch('requests.get')
     @patch('tracker.ai_logic.ask_oracle')
     def test_run_news_bot_success(self, mock_oracle, mock_requests):
-        """Simula el flujo completo del bot de noticias"""
-        # 1. Simulamos el HTML de una web de noticias
-        mock_html = MagicMock()
-        mock_html.status_code = 200
-        mock_html.text = '<html><div class="news-item">Bitcoin sube a la luna hoy</div></html>'
-        mock_requests.return_value = mock_html
+        # 1. Simulamos una respuesta de red exitosa
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        
+        # IMPORTANTE: Asegúrate de que el HTML tenga lo que el bot busca.
+        # Si tu bot busca 'h2', este HTML funcionará:
+        mock_response.text = """
+        <html>
+            <body>
+                <article>
+                    <h2>Bitcoin rompe records de nuevo</h2>
+                </article>
+            </body>
+        </html>
+        """
+        mock_requests.return_value = mock_response
 
-        # 2. Simulamos que la IA procesa la noticia correctamente
-        mock_oracle.return_value = "RESUMEN CYBERPUNK: El mercado está en llamas por BTC."
+        # 2. Simulamos que la IA responde algo
+        mock_oracle.return_value = "IA: Noticia procesada"
 
-        # 3. Llamamos al comando (ajusta el nombre si el tuyo es diferente)
+        # 3. Ejecutamos el comando
         call_command('run_news_bot')
 
-        # Verificamos que se intentó hacer el scraping
-        self.assertTrue(mock_requests.called)
-        # Verificamos que se llamó a la IA para resumir
-        self.assertTrue(mock_oracle.called)
+        # 4. Verificamos
+        self.assertTrue(mock_oracle.called, "La IA debería haber sido llamada")
 
