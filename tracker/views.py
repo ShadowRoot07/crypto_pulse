@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Cryptocurrency, ChatMessage
-from .ai_logic import get_ai_prediction, client # Importación centralizada
+# Importamos las funciones inteligentes que creamos
+from .ai_logic import get_ai_prediction, ask_oracle, client 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -30,29 +31,19 @@ def dashboard(request):
 
 @login_required
 def chat_bot(request):
-    """Maneja el chat con respuesta automática de IA unificada"""
+    """Maneja el chat con respuesta automática de IA rotativa"""
     if request.method == 'POST':
         user_msg = request.POST.get('message')
         if user_msg:
-            # 1. Guardar mensaje del usuario
             ChatMessage.objects.create(user=request.user, message=user_msg, sender_type='USER')
 
-            # 2. Generar respuesta de la IA
-            try:
-                prompt = f"Actúa como un asesor técnico Cyberpunk. El usuario dice: {user_msg}"
-                completion = client.chat.completions.create(
-                    model="llama-3.3-70b-specdec",
-                    messages=[
-                        {"role": "system", "content": "Eres el núcleo de IA de ShadowPulse. Respuestas breves, técnicas y con estilo hacker."},
-                        {"role": "user", "content": prompt}
-                    ],
-                )
-                ai_reply = completion.choices[0].message.content
-                # 3. Guardar respuesta del Bot
-                ChatMessage.objects.create(user=request.user, message=ai_reply, sender_type='BOT')
-            except Exception as e:
-                print(f"Error en Chat Groq: {e}")
-                ChatMessage.objects.create(user=request.user, message="[ERROR]: System link severed. Verifique API Key.", sender_type='BOT')
+            # Usamos ask_oracle para aprovechar el filtro de modelos automáticos
+            ai_reply = ask_oracle(
+                prompt=f"El usuario dice: {user_msg}",
+                system_prompt="Eres el núcleo de IA de ShadowPulse. Respuestas breves, técnicas y con estilo hacker."
+            )
+            
+            ChatMessage.objects.create(user=request.user, message=ai_reply, sender_type='BOT')
 
         return redirect('chat_bot')
 
@@ -61,26 +52,17 @@ def chat_bot(request):
 
 @login_required
 def wiki_view(request):
-    """El Oráculo de conocimiento Blockchain"""
+    """El Oráculo de conocimiento Blockchain con Failover"""
     ai_response = None
     if request.method == 'POST':
-        # Cambiamos 'query' por 'message' por si acaso, o asegúrate que en el HTML sea 'query'
-        user_query = request.POST.get('query') or request.POST.get('message') 
-        
+        user_query = request.POST.get('query') or request.POST.get('message')
+
         if user_query:
-            prompt = f"Eres un instructor experto en Blockchain. Responde con estilo Cyberpunk a: {user_query}"
-            try:
-                completion = client.chat.completions.create(
-                    model="llama-3.3-70b-specdec",
-                    messages=[
-                        {"role": "system", "content": "Eres un tutor de criptomonedas en un futuro distópico."},
-                        {"role": "user", "content": prompt}
-                    ],
-                )
-                ai_response = completion.choices[0].message.content
-            except Exception as e:
-                print(f"Error en Wiki Groq: {e}")
-                ai_response = "Error al conectar con la base de datos de conocimiento... Verifique GROQ_API_KEY en Vercel."
+            # Usamos la función inteligente de ai_logic
+            ai_response = ask_oracle(
+                prompt=user_query,
+                system_prompt="Eres un tutor de criptomonedas en un futuro distópico. Responde con estilo Cyberpunk."
+            )
         else:
             ai_response = "No se recibió ninguna consulta. Intente de nuevo."
 
@@ -94,6 +76,7 @@ def predict_api(request):
             data = json.loads(request.body)
             symbol = data.get('symbol')
             amount = data.get('amount')
+            # Esta función ya tiene el filtro de modelos incorporado en ai_logic
             prediction = get_ai_prediction(symbol, amount)
             return JsonResponse({'prediction': prediction})
         except Exception as e:
