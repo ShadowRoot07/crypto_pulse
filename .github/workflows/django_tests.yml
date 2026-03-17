@@ -9,17 +9,18 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
-    # Definimos variables de entorno para que Django no explote
+
     env:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-      DATABASE_URL: sqlite:///db.sqlite3 # Usamos SQLite para tests rápidos
+      DATABASE_URL: sqlite:///db.sqlite3 
       SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
       DEBUG: "True"
+      # Forzamos Node 24 para evitar los avisos de depreciación que viste en el log
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -28,8 +29,10 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install django django-environ requests beautifulsoup4 groq gunicorn psycopg2-binary
-        # Si usas un requirements.txt, usa: pip install -r requirements.txt
+        # Instalamos directamente desde tu archivo de requerimientos
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        # Aseguramos psycopg2-binary para evitar fallos de compilación en el runner
+        pip install psycopg2-binary
 
     - name: Run Migrations
       run: |
@@ -42,5 +45,6 @@ jobs:
 
     - name: Run Tests
       run: |
+        # Solo ejecutará tests si tienes archivos test.py creados
         python manage.py test
 
