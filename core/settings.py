@@ -13,11 +13,11 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # Ajuste para permitir local y dominios de Vercel
 ALLOWED_HOSTS = [
-    'localhost', 
-    '127.0.0.1', 
-    '.vercel.app', 
+    'localhost',
+    '127.0.0.1',
+    '.vercel.app',
     '0.0.0.0'
-] + os.environ.get('ALLOWED_HOSTS', '').split(',')
+] + [h for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h]
 
 # --- APPS ---
 INSTALLED_APPS = [
@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tracker', 
+    'tracker',
 ]
 
 # --- MIDDLEWARE ---
@@ -42,7 +42,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'core.urls' # Asegúrate que tu carpeta principal se llame core
+ROOT_URLCONF = 'core.urls' 
 
 TEMPLATES = [
     {
@@ -62,22 +62,34 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# --- BASE DE DATOS (NEON.TECH) ---
+# --- CONFIGURACIÓN DE BASE DE DATOS INTELIGENTE ---
+# Extraemos la configuración de la URL
+db_from_env = dj_database_url.config(
+    default=os.environ.get('DATABASE_URL'),
+    conn_max_age=600,
+)
+
+# CRÍTICO: Solo activar SSL si NO es SQLite. 
+# Esto evita el error 'sslmode' en GitHub Actions.
+if db_from_env and db_from_env.get('ENGINE') != 'django.db.backends.sqlite3':
+    db_from_env['OPTIONS'] = {'sslmode': 'require'}
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
-    )
+    'default': db_from_env
 }
 
 # --- ARCHIVOS ESTÁTICOS ---
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-# STATIC_ROOT es donde se recolectan los archivos para producción
+# Verificamos si la carpeta existe para evitar advertencias de Django
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+if os.path.exists(STATIC_DIR):
+    STATICFILES_DIRS = [STATIC_DIR]
+else:
+    STATICFILES_DIRS = []
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Configuración de WhiteNoise para compresión y caché persistente
+# Configuración de WhiteNoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # --- INTERFAZ Y AUTH ---
